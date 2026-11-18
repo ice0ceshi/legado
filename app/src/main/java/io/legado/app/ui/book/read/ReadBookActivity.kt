@@ -247,6 +247,33 @@ class ReadBookActivity : BaseReadBookActivity(),
         }
     }
 
+    // 启动或关闭悬浮窗的方法
+private fun toggleFloatWindow() {
+    // 判断如果悬浮窗已经显示了，就关闭它
+    if (io.legado.app.ui.floatwindow.TransparentFloatService.isShowing()) {
+        stopService(android.content.Intent(this, io.legado.app.ui.floatwindow.TransparentFloatService::class.java))
+    } else {
+        // ★ 核心难点：怎么获取阅读器里的文字？
+        // 在 Legado 中，当前页面的文字保存在 readView 这个组件里
+        // 这段代码的意思是：如果读到了当前页面的文字，就传过去；如果没有，就传一句测试的话
+        val currentPageText = try {
+            // 尝试获取当前页面的文字（Legado 的分页引擎在 ReadView 里）
+            readView.curPage.text ?: "悬浮窗已启动，但没抓到文字"
+        } catch (e: Exception) {
+            "悬浮窗测试成功！\n\n这是一段测试文字。\n你可以按住顶部拖动我。"
+        }
+
+        // 启动 Service 并传递文字
+        val intent = android.content.Intent(this, io.legado.app.ui.floatwindow.TransparentFloatService::class.java).apply {
+            putExtra("text", currentPageText)
+        }
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+    }
+}
     //恢复跳转前进度对话框的交互结果
     private var confirmRestoreProcess: Boolean? = null
     private val networkChangedListener by lazy {
@@ -258,6 +285,14 @@ class ReadBookActivity : BaseReadBookActivity(),
     @SuppressLint("ClickableViewAccessibility")
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+        // 检查悬浮窗权限（如果没有权限，会跳转到系统设置让你开启）
+if (!android.provider.Settings.canDrawOverlays(this)) {
+    val intent = android.content.Intent(
+        android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+        android.net.Uri.parse("package:$packageName")
+    )
+    startActivity(intent)
+}
         binding.cursorLeft.setColorFilter(accentColor)
         binding.cursorRight.setColorFilter(accentColor)
         binding.cursorLeft.setOnTouchListener(this)
@@ -814,6 +849,8 @@ class ReadBookActivity : BaseReadBookActivity(),
     }
 
     override fun onLongScreenshotTouchEvent(event: MotionEvent): Boolean {
+        // 调用我们自己写的悬浮窗逻辑
+        toggleFloatWindow()
         return binding.readView.onTouchEvent(event)
     }
 
