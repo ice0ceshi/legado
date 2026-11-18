@@ -3,6 +3,7 @@ package io.legado.app.ui.book.read
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.res.Configuration
+import android.net.Uri
 import android.os.Bundle
 import android.os.Looper
 import android.view.Gravity
@@ -16,7 +17,6 @@ import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.PopupMenu
-import androidx.core.net.toUri
 import androidx.core.view.get
 import androidx.core.view.size
 import androidx.lifecycle.lifecycleScope
@@ -247,17 +247,6 @@ class ReadBookActivity : BaseReadBookActivity(),
         }
     }
 
-        // 启动 Service 并传递文字
-        val intent = android.content.Intent(this, io.legado.app.ui.floatwindow.TransparentFloatService::class.java).apply {
-            putExtra("text", currentPageText)
-        }
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            startForegroundService(intent)
-        } else {
-            startService(intent)
-        }
-    }
-}
     //恢复跳转前进度对话框的交互结果
     private var confirmRestoreProcess: Boolean? = null
     private val networkChangedListener by lazy {
@@ -269,7 +258,7 @@ class ReadBookActivity : BaseReadBookActivity(),
     @SuppressLint("ClickableViewAccessibility")
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        TestFloatHelper.test(this) //
+        TestFloatHelper.test(this)
         binding.cursorLeft.setColorFilter(accentColor)
         binding.cursorRight.setColorFilter(accentColor)
         binding.cursorLeft.setOnTouchListener(this)
@@ -883,7 +872,7 @@ class ReadBookActivity : BaseReadBookActivity(),
                 ReadBook.bookSource?.bookSourceUrl?.let {
                     scopes.add(it)
                 }
-                val text = selectedText.lineSequence().joinToString("\n") { it.trim() }
+                val text = selectedText.lineSequence().map { it.trim() }.joinToString("\n")
                 replaceActivity.launch(
                     ReplaceEditActivity.startIntent(
                         this,
@@ -1417,7 +1406,7 @@ class ReadBookActivity : BaseReadBookActivity(),
                             value = src
                         }
                     } else {
-                        viewModel.saveImage(src, path.toUri())
+                        viewModel.saveImage(src, Uri.parse(path))
                     }
                 }
 
@@ -1663,7 +1652,6 @@ class ReadBookActivity : BaseReadBookActivity(),
                     9 -> readView.invalidateTextPage()
                     10 -> ChapterProvider.upLayout()
                     11 -> readView.submitRenderTask()
-                    12 -> upPageAnim()
                 }
             }
         }
