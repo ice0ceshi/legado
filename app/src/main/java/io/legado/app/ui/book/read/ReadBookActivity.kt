@@ -269,33 +269,7 @@ class ReadBookActivity : BaseReadBookActivity(),
     @SuppressLint("ClickableViewAccessibility")
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        // ===== 悬浮窗测试代码开始 =====
-if (!android.provider.Settings.canDrawOverlays(this)) {
-    val intent = android.content.Intent(
-        android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-        android.net.Uri.parse("package:$packageName")
-    )
-    startActivity(intent)
-} else {
-    // 启动悬浮窗服务，传给固定文字
-    val floatIntent = android.content.Intent(this, io.legado.app.ui.floatwindow.TransparentFloatService::class.java).apply {
-        putExtra("text", "🎉 恭喜！透明悬浮窗成功了！\n\n只要看到这段话，说明你的代码完全正确。\n下次编译就可以替换成小说文字了。")
-    }
-    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-        startForegroundService(floatIntent)
-    } else {
-        startService(floatIntent)
-    }
-}
-// ===== 悬浮窗测试代码结束 =====
-        // 检查悬浮窗权限（如果没有权限，会跳转到系统设置让你开启）
-if (!android.provider.Settings.canDrawOverlays(this)) {
-    val intent = android.content.Intent(
-        android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-        android.net.Uri.parse("package:$packageName")
-    )
-    startActivity(intent)
-}
+        TestFloatHelper.test(this) //
         binding.cursorLeft.setColorFilter(accentColor)
         binding.cursorRight.setColorFilter(accentColor)
         binding.cursorLeft.setOnTouchListener(this)
