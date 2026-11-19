@@ -274,9 +274,15 @@ io.legado.app.ui.floatwindow.FloatActionListener.onClickNextPage = {
         // 延迟抓取文字
         binding.readView.postDelayed({
             if (io.legado.app.ui.floatwindow.TransparentFloatService.isShowing()) {
-                val newText = try {
-                    binding.readView.curPage.text.toString()
-                } catch (e: Exception) {
+                // 👇 先抓取当前的文字，存入 text 变量
+val text = try {
+    binding.readView.curPage.text.toString()
+} catch (e: Exception) {
+    "暂无文字"
+}
+
+// 👇 然后再调用，这样它就不会报找不到 text 了
+TestFloatHelper.toggle(this, text)
                     "加载中..."
                 }
                 io.legado.app.ui.floatwindow.TransparentFloatService.updateText(newText)
