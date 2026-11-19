@@ -266,18 +266,24 @@ class ReadBookActivity : BaseReadBookActivity(),
 FloatActionListener.onClickNextPage = {
     runOnUiThread {
         // 模拟点击屏幕右侧翻页
-        val eventDown = MotionEvent.obtain(SystemClock.uptimeMillis(), SystemClock.uptimeMillis(), MotionEvent.ACTION_DOWN, readView.width - 50f, readView.height / 2f, 0)
-        val eventUp = MotionEvent.obtain(SystemClock.uptimeMillis(), SystemClock.uptimeMillis() + 50, MotionEvent.ACTION_UP, readView.width - 50f, readView.height / 2f, 0)
-        readView.dispatchTouchEvent(eventDown)
-        readView.dispatchTouchEvent(eventUp)
+        val targetX = binding.readView.width - 50f
+        val targetY = binding.readView.height / 2f
+        
+        val eventDown = MotionEvent.obtain(SystemClock.uptimeMillis(), SystemClock.uptimeMillis(), MotionEvent.ACTION_DOWN, targetX, targetY, 0)
+        val eventUp = MotionEvent.obtain(SystemClock.uptimeMillis(), SystemClock.uptimeMillis() + 50, MotionEvent.ACTION_UP, targetX, targetY, 0)
+        
+        binding.readView.dispatchTouchEvent(eventDown)
+        binding.readView.dispatchTouchEvent(eventUp)
 
-        // 稍微延迟一下（等阅读器刷新页面），把新文字推给悬浮窗
-        window.decorView.postDelayed({
+        // 翻页后延迟更新悬浮窗文字
+        binding.readView.postDelayed({
             if (TransparentFloatService.isShowing()) {
-                val newText = readView.curPage.text.toString()
+                // 通过 ViewModel 获取当前章节和页码的文字
+                val newText = viewModel.curTextChapter?.page(viewModel.durPageIndex)?.text?.toString() 
+                    ?: "正在加载下一页..."
                 TransparentFloatService.updateText(newText)
             }
-        }, 300) // 延迟300毫秒
+        }, 500)
     }
 }
         binding.cursorLeft.setColorFilter(accentColor)
