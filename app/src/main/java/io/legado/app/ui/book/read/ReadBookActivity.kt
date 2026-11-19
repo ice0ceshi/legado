@@ -287,13 +287,14 @@ io.legado.app.ui.floatwindow.FloatActionListener.onClickNextPage = {
     }
 }
 
-// 👇 这里定义了 text，用来开启悬浮窗
-val text = try {
+// 👇 确保这里有 val newText = 
+val newText = try {
     binding.readView.curPage.text.toString()
 } catch (e: Exception) {
-    "暂无文字"
+    "加载中..."
 }
-TestFloatHelper.toggle(this, text)
+io.legado.app.ui.floatwindow.TransparentFloatService.updateText(newText)
+TestFloatHelper.toggle(this, try { binding.readView.curPage.text.toString() } catch (e: Exception) { "暂无文字" })
         binding.cursorLeft.setColorFilter(accentColor)
         binding.cursorRight.setColorFilter(accentColor)
         binding.cursorLeft.setOnTouchListener(this)
