@@ -261,34 +261,27 @@ class ReadBookActivity : BaseReadBookActivity(),
     @SuppressLint("ClickableViewAccessibility")
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        TestFloatHelper.test(this)
         // 监听悬浮窗的点击事件，执行翻页
-FloatActionListener.onClickNextPage = {
+io.legado.app.ui.floatwindow.FloatActionListener.onClickNextPage = {
     runOnUiThread {
-        // 模拟点击屏幕右侧翻页
         val targetX = binding.readView.width - 50f
         val targetY = binding.readView.height / 2f
-        
-        val eventDown = MotionEvent.obtain(SystemClock.uptimeMillis(), SystemClock.uptimeMillis(), MotionEvent.ACTION_DOWN, targetX, targetY, 0)
-        val eventUp = MotionEvent.obtain(SystemClock.uptimeMillis(), SystemClock.uptimeMillis() + 50, MotionEvent.ACTION_UP, targetX, targetY, 0)
-        
-        binding.readView.dispatchTouchEvent(eventDown)
-        binding.readView.dispatchTouchEvent(eventUp)
+        val down = android.view.MotionEvent.obtain(android.os.SystemClock.uptimeMillis(), android.os.SystemClock.uptimeMillis(), android.view.MotionEvent.ACTION_DOWN, targetX, targetY, 0)
+        val up = android.view.MotionEvent.obtain(android.os.SystemClock.uptimeMillis(), android.os.SystemClock.uptimeMillis() + 50, android.view.MotionEvent.ACTION_UP, targetX, targetY, 0)
+        binding.readView.dispatchTouchEvent(down)
+        binding.readView.dispatchTouchEvent(up)
 
-        // 翻页后延迟更新悬浮窗文字
+        // 延迟抓取文字
         binding.readView.postDelayed({
-    if (io.legado.app.ui.floatwindow.TransparentFloatService.isShowing()) {
-        // 从 ReadBook 单例获取当前页面的文字
-        val newText = try {
-            val textChapter = ReadBook.curTextChapter
-            val page = textChapter?.page(ReadBook.durChapterIndex)
-            page?.text?.toString() ?: "加载中..."
-        } catch (e: Exception) {
-            "获取失败"
-        }
-        io.legado.app.ui.floatwindow.TransparentFloatService.updateText(newText)
-    }
-}, 400)
+            if (io.legado.app.ui.floatwindow.TransparentFloatService.isShowing()) {
+                val newText = try {
+                    binding.readView.curPage.text.toString()
+                } catch (e: Exception) {
+                    "加载中..."
+                }
+                io.legado.app.ui.floatwindow.TransparentFloatService.updateText(newText)
+            }
+        }, 400)
     }
 }
         binding.cursorLeft.setColorFilter(accentColor)
@@ -1647,6 +1640,11 @@ FloatActionListener.onClickNextPage = {
 
     override fun onDestroy() {
         super.onDestroy()
+        if (TestFloatHelper.isShowing) {
+    stopService(android.content.Intent(this, io.legado.app.ui.floatwindow.TransparentFloatService::class.java))
+    TestFloatHelper.isShowing = false
+}
+io.legado.app.ui.floatwindow.FloatActionListener.onClickNextPage = null
         tts?.clearTts()
         textActionMenu.dismiss()
         popupAction.dismiss()
