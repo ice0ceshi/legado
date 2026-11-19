@@ -283,8 +283,6 @@ val text = try {
 
 // 👇 然后再调用，这样它就不会报找不到 text 了
 TestFloatHelper.toggle(this, text)
-                    "加载中..."
-                }
                 io.legado.app.ui.floatwindow.TransparentFloatService.updateText(newText)
             }
         }, 400)
