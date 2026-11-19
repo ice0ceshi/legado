@@ -259,6 +259,24 @@ class ReadBookActivity : BaseReadBookActivity(),
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         TestFloatHelper.test(this)
+        // 监听悬浮窗的点击事件，执行翻页
+FloatActionListener.onClickNextPage = {
+    runOnUiThread {
+        // 模拟点击屏幕右侧翻页
+        val eventDown = MotionEvent.obtain(SystemClock.uptimeMillis(), SystemClock.uptimeMillis(), MotionEvent.ACTION_DOWN, readView.width - 50f, readView.height / 2f, 0)
+        val eventUp = MotionEvent.obtain(SystemClock.uptimeMillis(), SystemClock.uptimeMillis() + 50, MotionEvent.ACTION_UP, readView.width - 50f, readView.height / 2f, 0)
+        readView.dispatchTouchEvent(eventDown)
+        readView.dispatchTouchEvent(eventUp)
+
+        // 稍微延迟一下（等阅读器刷新页面），把新文字推给悬浮窗
+        window.decorView.postDelayed({
+            if (TransparentFloatService.isShowing()) {
+                val newText = readView.curPage.text.toString()
+                TransparentFloatService.updateText(newText)
+            }
+        }, 300) // 延迟300毫秒
+    }
+}
         binding.cursorLeft.setColorFilter(accentColor)
         binding.cursorRight.setColorFilter(accentColor)
         binding.cursorLeft.setOnTouchListener(this)
