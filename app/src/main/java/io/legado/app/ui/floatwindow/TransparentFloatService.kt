@@ -15,6 +15,7 @@ class TransparentFloatService : Service() {
     private lateinit var windowManager: WindowManager
     private lateinit var floatView: View
     private lateinit var layoutParams: WindowManager.LayoutParams
+    private var isDragging = false
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -25,7 +26,6 @@ class TransparentFloatService : Service() {
     }
 
     private fun showFloatWindow() {
-        // 1. 初始化布局参数
         layoutParams = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
@@ -33,46 +33,66 @@ class TransparentFloatService : Service() {
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
             else
                 WindowManager.LayoutParams.TYPE_PHONE,
-            // 允许穿透点击、不抢占焦点、让背景透明
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                     WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
                     WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            y = 200 // 初始Y轴位置
+            y = 300 // 初始位置
         }
 
-        // 2. 加载布局
         floatView = LayoutInflater.from(this).inflate(R.layout.view_float_text, null)
-
-        // 3. 设置拖拽逻辑
-        val dragHandle = floatView.findViewById<View>(R.id.drag_handle)
-        setupDrag(dragHandle)
-
-        // 4. 添加到窗口
+        
+        // 设置触摸逻辑
+        setupTouchLogic(floatView)
         windowManager.addView(floatView, layoutParams)
     }
 
-    private fun setupDrag(dragView: View) {
+    private fun setupTouchLogic(view: View) {
         var initialX = 0
         var initialY = 0
         var initialTouchX = 0f
         var initialTouchY = 0f
+        var isLongPress = false
 
-        dragView.setOnTouchListener { _, event ->
+        view.setOnTouchListener { _, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
                     initialX = layoutParams.x
                     initialY = layoutParams.y
                     initialTouchX = event.rawX
                     initialTouchY = event.rawY
+                    isDragging = false
+                    isLongPress = false
+                    // 按下 400 毫秒后判定为长按
+                    view.postDelayed({ isLongPress = true }, 400)
                     true
                 }
                 MotionEvent.ACTION_MOVE -> {
-                    layoutParams.x = initialX + (event.rawX - initialTouchX).toInt()
-                    layoutParams.y = initialY + (event.rawY - initialTouchY).toInt()
-                    windowManager.updateViewLayout(floatView, layoutParams)
+                    // 如果是长按状态，或者移动距离超过20像素，就执行拖动
+                    if (isLongPress || (Math.abs(event.rawX - initialTouchX) > 20 || Math.abs(event.rawY - initialTouchY) > 20)) {
+                        if (isLongPress || isDragging) {
+                            isDragging = true
+                            layoutParams.x = initialX + (event.rawX - initialTouchX).toInt()
+                            layoutParams.y = initialY + (event.rawY - initialTouchY).toInt()
+                            windowManager.updateViewLayout(floatView, layoutParams)
+                        }
+                    }
+                    true
+                }
+                MotionEvent.ACTION_UP -> {
+                    // 如果不是拖拽，且时间很短，就判定为点击（触发翻页）
+                    if (!isDragging && !isLongPress) {
+                        FloatActionListener.onClickNextPage?.invoke()
+                    }
+                    isDragging = false
+                    isLongPress = false
+                    true
+                }
+                MotionEvent.ACTION_CANCEL -> {
+                    isDragging = false
+                    isLongPress = false
                     true
                 }
                 else -> false
@@ -80,7 +100,6 @@ class TransparentFloatService : Service() {
         }
     }
 
-    // 供外部调用的静态方法，更新文字内容
     companion object {
         private var instance: TransparentFloatService? = null
 
@@ -93,7 +112,6 @@ class TransparentFloatService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         instance = this
-        // 如果通过Intent传递了初始文字
         intent?.getStringExtra("text")?.let { updateText(it) }
         return START_STICKY
     }
@@ -105,4 +123,9 @@ class TransparentFloatService : Service() {
             windowManager.removeView(floatView)
         }
     }
+}
+
+// 新加一个全局监听器，用来和阅读界面通信
+object FloatActionListener {
+    var onClickNextPage: (() -> Unit)? = null
 }
