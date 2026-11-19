@@ -9,7 +9,6 @@ import io.legado.app.ui.floatwindow.TransparentFloatService
 
 object TestFloatHelper {
     var isShowing = false
-        private set
 
     // 接收 Activity 和 当前页面的文字
     fun toggle(ctx: ReadBookActivity, currentText: String) {
