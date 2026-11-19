@@ -277,13 +277,18 @@ FloatActionListener.onClickNextPage = {
 
         // 翻页后延迟更新悬浮窗文字
         binding.readView.postDelayed({
-            if (TransparentFloatService.isShowing()) {
-                // 通过 ViewModel 获取当前章节和页码的文字
-                val newText = viewModel.curTextChapter?.page(viewModel.durPageIndex)?.text?.toString() 
-                    ?: "正在加载下一页..."
-                TransparentFloatService.updateText(newText)
-            }
-        }, 500)
+    if (io.legado.app.ui.floatwindow.TransparentFloatService.isShowing()) {
+        // 从 ReadBook 单例获取当前页面的文字
+        val newText = try {
+            val textChapter = ReadBook.curTextChapter
+            val page = textChapter?.page(ReadBook.durChapterIndex)
+            page?.text?.toString() ?: "加载中..."
+        } catch (e: Exception) {
+            "获取失败"
+        }
+        io.legado.app.ui.floatwindow.TransparentFloatService.updateText(newText)
+    }
+}, 400)
     }
 }
         binding.cursorLeft.setColorFilter(accentColor)
