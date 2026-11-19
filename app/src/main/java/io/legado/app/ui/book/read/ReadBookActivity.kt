@@ -261,33 +261,28 @@ class ReadBookActivity : BaseReadBookActivity(),
     @SuppressLint("ClickableViewAccessibility")
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        // 👇 监听悬浮窗的点击事件，执行翻页 👇
+        // ================= 悬浮窗功能 =================
+// 1. 开启悬浮窗，并传入当前页面的文字
+TestFloatHelper.toggle(this, try { binding.readView.curPage.text.toString() } catch (e: Exception) { "加载中..." })
+
+// 2. 监听悬浮窗点击，执行翻页，并更新文字
 io.legado.app.ui.floatwindow.FloatActionListener.onClickNextPage = {
     runOnUiThread {
-        // 模拟点击屏幕右侧翻页
-        val targetX = binding.readView.width - 50f
-        val targetY = binding.readView.height / 2f
-        val down = android.view.MotionEvent.obtain(android.os.SystemClock.uptimeMillis(), android.os.SystemClock.uptimeMillis(), android.view.MotionEvent.ACTION_DOWN, targetX, targetY, 0)
-        val up = android.view.MotionEvent.obtain(android.os.SystemClock.uptimeMillis(), android.os.SystemClock.uptimeMillis() + 50, android.view.MotionEvent.ACTION_UP, targetX, targetY, 0)
+        // 模拟点击屏幕右侧
+        val down = android.view.MotionEvent.obtain(android.os.SystemClock.uptimeMillis(), android.os.SystemClock.uptimeMillis(), android.view.MotionEvent.ACTION_DOWN, binding.readView.width - 50f, binding.readView.height / 2f, 0)
+        val up = android.view.MotionEvent.obtain(android.os.SystemClock.uptimeMillis(), android.os.SystemClock.uptimeMillis() + 50, android.view.MotionEvent.ACTION_UP, binding.readView.width - 50f, binding.readView.height / 2f, 0)
         binding.readView.dispatchTouchEvent(down)
         binding.readView.dispatchTouchEvent(up)
-
-        // 延迟抓取文字
+        
+        // 延迟 300 毫秒，等画面刷新后，直接抓取新文字更新
         binding.readView.postDelayed({
             if (io.legado.app.ui.floatwindow.TransparentFloatService.isShowing()) {
-                val newText = try {
-                    binding.readView.curPage.text.toString()
-                } catch (e: Exception) {
-                    "加载中..."
-                }
-                io.legado.app.ui.floatwindow.TransparentFloatService.updateText(newText)
+                io.legado.app.ui.floatwindow.TransparentFloatService.updateText(try { binding.readView.curPage.text.toString() } catch (e: Exception) { "..." })
             }
-        }, 400)
+        }, 300)
     }
 }
-
-// 👇 直接开启悬浮窗（测试用） 👇
-TestFloatHelper.toggle(this, try { binding.readView.curPage.text.toString() } catch (e: Exception) { "暂无文字" })
+// =============================================
         binding.cursorLeft.setColorFilter(accentColor)
         binding.cursorRight.setColorFilter(accentColor)
         binding.cursorLeft.setOnTouchListener(this)
