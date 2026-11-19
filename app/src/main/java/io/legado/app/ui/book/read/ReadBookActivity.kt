@@ -261,7 +261,7 @@ class ReadBookActivity : BaseReadBookActivity(),
     @SuppressLint("ClickableViewAccessibility")
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        // 监听悬浮窗的点击事件，执行翻页
+        // 👇 监听悬浮窗的点击事件，执行翻页 👇
 io.legado.app.ui.floatwindow.FloatActionListener.onClickNextPage = {
     runOnUiThread {
         // 模拟点击屏幕右侧翻页
@@ -275,7 +275,6 @@ io.legado.app.ui.floatwindow.FloatActionListener.onClickNextPage = {
         // 延迟抓取文字
         binding.readView.postDelayed({
             if (io.legado.app.ui.floatwindow.TransparentFloatService.isShowing()) {
-                // 👇 这里定义了 newText
                 val newText = try {
                     binding.readView.curPage.text.toString()
                 } catch (e: Exception) {
@@ -287,13 +286,7 @@ io.legado.app.ui.floatwindow.FloatActionListener.onClickNextPage = {
     }
 }
 
-// 👇 确保这里有 val newText = 
-val newText = try {
-    binding.readView.curPage.text.toString()
-} catch (e: Exception) {
-    "加载中..."
-}
-io.legado.app.ui.floatwindow.TransparentFloatService.updateText(newText)
+// 👇 直接开启悬浮窗（测试用） 👇
 TestFloatHelper.toggle(this, try { binding.readView.curPage.text.toString() } catch (e: Exception) { "暂无文字" })
         binding.cursorLeft.setColorFilter(accentColor)
         binding.cursorRight.setColorFilter(accentColor)
