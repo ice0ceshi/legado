@@ -264,6 +264,7 @@ class ReadBookActivity : BaseReadBookActivity(),
         // 监听悬浮窗的点击事件，执行翻页
 io.legado.app.ui.floatwindow.FloatActionListener.onClickNextPage = {
     runOnUiThread {
+        // 模拟点击屏幕右侧翻页
         val targetX = binding.readView.width - 50f
         val targetY = binding.readView.height / 2f
         val down = android.view.MotionEvent.obtain(android.os.SystemClock.uptimeMillis(), android.os.SystemClock.uptimeMillis(), android.view.MotionEvent.ACTION_DOWN, targetX, targetY, 0)
@@ -274,20 +275,25 @@ io.legado.app.ui.floatwindow.FloatActionListener.onClickNextPage = {
         // 延迟抓取文字
         binding.readView.postDelayed({
             if (io.legado.app.ui.floatwindow.TransparentFloatService.isShowing()) {
-                // 👇 先抓取当前的文字，存入 text 变量
-val text = try {
-    binding.readView.curPage.text.toString()
-} catch (e: Exception) {
-    "暂无文字"
-}
-
-// 👇 然后再调用，这样它就不会报找不到 text 了
-TestFloatHelper.toggle(this, text)
+                // 👇 这里定义了 newText
+                val newText = try {
+                    binding.readView.curPage.text.toString()
+                } catch (e: Exception) {
+                    "加载中..."
+                }
                 io.legado.app.ui.floatwindow.TransparentFloatService.updateText(newText)
             }
         }, 400)
     }
 }
+
+// 👇 这里定义了 text，用来开启悬浮窗
+val text = try {
+    binding.readView.curPage.text.toString()
+} catch (e: Exception) {
+    "暂无文字"
+}
+TestFloatHelper.toggle(this, text)
         binding.cursorLeft.setColorFilter(accentColor)
         binding.cursorRight.setColorFilter(accentColor)
         binding.cursorLeft.setOnTouchListener(this)
