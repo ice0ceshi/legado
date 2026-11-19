@@ -263,12 +263,16 @@ class ReadBookActivity : BaseReadBookActivity(),
         super.onActivityCreated(savedInstanceState)
         // ================= 悬浮窗功能 =================
 // 1. 开启悬浮窗，并传入当前页面的文字
-TestFloatHelper.toggle(this, binding.readView.curPage.textChapter?.getReadText(binding.readView.curPage.index) ?: "加载中...")
+TestFloatHelper.toggle(this, try {
+    binding.readView.curPage.textLines.joinToString("\n") { line -> 
+        line.textColumns.joinToString("") { it.text } 
+    }
+} catch (e: Exception) { "加载中..." })
 
 // 2. 监听悬浮窗点击，执行翻页，并更新文字
 io.legado.app.ui.floatwindow.FloatActionListener.onClickNextPage = {
     runOnUiThread {
-        // 模拟点击屏幕右侧
+        // 模拟点击屏幕右侧翻页
         val down = android.view.MotionEvent.obtain(android.os.SystemClock.uptimeMillis(), android.os.SystemClock.uptimeMillis(), android.view.MotionEvent.ACTION_DOWN, binding.readView.width - 50f, binding.readView.height / 2f, 0)
         val up = android.view.MotionEvent.obtain(android.os.SystemClock.uptimeMillis(), android.os.SystemClock.uptimeMillis() + 50, android.view.MotionEvent.ACTION_UP, binding.readView.width - 50f, binding.readView.height / 2f, 0)
         binding.readView.dispatchTouchEvent(down)
@@ -278,7 +282,11 @@ io.legado.app.ui.floatwindow.FloatActionListener.onClickNextPage = {
         binding.readView.postDelayed({
             if (io.legado.app.ui.floatwindow.TransparentFloatService.isShowing()) {
                 io.legado.app.ui.floatwindow.TransparentFloatService.updateText(
-                    binding.readView.curPage.textChapter?.getReadText(binding.readView.curPage.index) ?: "加载中..."
+                    try {
+                        binding.readView.curPage.textLines.joinToString("\n") { line -> 
+                            line.textColumns.joinToString("") { it.text } 
+                        }
+                    } catch (e: Exception) { "..." }
                 )
             }
         }, 300)
